@@ -2,9 +2,17 @@
 set -e
 
 # --- CONFIGURATION ---
-TOPIC="${NTFY_TOPIC:?NTFY_TOPIC must be set}"
-CACHE_FILE="$(dirname "$0")/seasons_cache.txt"
+DIR="$(dirname "$0")"
+CONFIG_FILE="$DIR/config.env"
+CACHE_FILE="$DIR/seasons_cache.txt"
 API_URL='https://api.daysmartrecreation.com/v1/seasons?cache\[save\]=false&include=leagues&fields\[season\]=name%2Cid&page\[size\]=100&filter\[signup_end__gte\]=2026-08-02&filter\[online_registration_enabled\]=true&filter\[or.leagues.program_id\]=6&company=kraken'
+
+# NTFY_TOPIC (required) and EMAIL_TO (optional) come from config.env
+if [ -f "$CONFIG_FILE" ]; then
+    # shellcheck source=/dev/null
+    . "$CONFIG_FILE"
+fi
+TOPIC="${NTFY_TOPIC:?NTFY_TOPIC must be set in $CONFIG_FILE}"
 
 # 1. Fetch current API output and sort it for clean line-by-line comparison
 CURRENT_DATA=$(curl -s "$API_URL" | jq -r '.data[] | .attributes.name' | sort)
@@ -35,22 +43,20 @@ if [ -n "$DIFF_OUTPUT" ]; then
     FORMATTED_CHANGES=$(echo "$DIFF_OUTPUT" | grep -E '^[+-]' | grep -vE '^(---|\+\+\+)')
 
     # Send push notification via ntfy
-    curl -sf \
+    curl -s \
         -H "Title: KHL Seasons Changed" \
         -H "Tags: hockey,memo" \
         -d "$FORMATTED_CHANGES" \
         "https://ntfy.sh/$TOPIC"
     echo
 
-    # Email a copy through Gmail SMTP if credentials are set
-    if [ -n "${GMAIL_USER:-}" ] && [ -n "${GMAIL_APP_PASSWORD:-}" ]; then
-        printf 'From: %s\r\nTo: %s\r\nSubject: KHL Seasons Changed\r\n\r\n%s\r\n' \
-            "$GMAIL_USER" "$GMAIL_USER" "$FORMATTED_CHANGES" |
-            curl -sSf --ssl-reqd --url "smtp://smtp.gmail.com:587" \
-                --user "$GMAIL_USER:$GMAIL_APP_PASSWORD" \
-                --mail-from "$GMAIL_USER" --mail-rcpt "$GMAIL_USER" \
-                --upload-file -
-        echo "$(date): Email sent."
+    # Send an email copy via msmtp
+    if [ -n "${EMAIL_TO:-}" ]; then
+        if printf 'To: %s\nSubject: KHL Seasons Changed\n\n%s\n' "$EMAIL_TO" "$FORMATTED_CHANGES" | msmtp -t; then
+            echo "$(date): Email sent to $EMAIL_TO."
+        else
+            echo "$(date): Warning: email to $EMAIL_TO failed."
+        fi
     fi
 
     # Update cache file with new data

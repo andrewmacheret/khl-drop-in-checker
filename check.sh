@@ -34,10 +34,15 @@ if [ -n "$DIFF_OUTPUT" ]; then
     # Ignore lines that start with '+++' or '---'
     FORMATTED_CHANGES=$(echo "$DIFF_OUTPUT" | grep -E '^[+-]' | grep -vE '^(---|\+\+\+)')
 
-    # Send push notification via ntfy
-    curl -s \
+    # Send push notification via ntfy (and an email copy if NTFY_EMAIL is set)
+    EMAIL_HEADER=()
+    if [ -n "${NTFY_EMAIL:-}" ]; then
+        EMAIL_HEADER=(-H "Email: $NTFY_EMAIL")
+    fi
+    curl -sf \
         -H "Title: KHL Seasons Changed" \
         -H "Tags: hockey,memo" \
+        "${EMAIL_HEADER[@]}" \
         -d "$FORMATTED_CHANGES" \
         "https://ntfy.sh/$TOPIC"
 

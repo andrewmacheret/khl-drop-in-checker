@@ -21,6 +21,7 @@ jobs:
       - name: Check for season changes
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: ./check.sh
 
       - name: Commit updated cache

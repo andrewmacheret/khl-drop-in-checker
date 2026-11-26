@@ -1,6 +1,6 @@
-# check-khl-seasons
+# khl-drop-in-checker
 
-[![License](https://img.shields.io/badge/license-MIT-lightgray.svg)](https://github.com/andrewmacheret/check-khl-seasons/blob/main/LICENSE.md)
+[![License](https://img.shields.io/badge/license-MIT-lightgray.svg)](https://github.com/andrewmacheret/khl-drop-in-checker/blob/main/LICENSE.md)
 
 Get a phone notification (and optionally an email) when the Kraken Hockey League (KHL) season list changes, so you
 can sign up as soon as a new season opens.
@@ -28,8 +28,8 @@ On Debian/Ubuntu: `sudo apt install curl jq msmtp`
 1. Clone the repo:
 
    ```
-   git clone https://github.com/andrewmacheret/check-khl-seasons.git ~/check-khl-seasons
-   cd ~/check-khl-seasons
+   git clone https://github.com/andrewmacheret/khl-drop-in-checker.git ~/khl-drop-in-checker
+   cd ~/khl-drop-in-checker
    ```
 
 2. Create `config.env` from the example and edit it:
@@ -52,7 +52,7 @@ On Debian/Ubuntu: `sudo apt install curl jq msmtp`
 5. Add a daily cron job (`crontab -e`), e.g. every day at 9 AM:
 
    ```
-   0 9 * * * /usr/bin/bash /home/YOU/check-khl-seasons/check.sh >> /home/YOU/check-khl-seasons/check.log 2>&1
+   0 9 * * * /usr/bin/bash /home/YOU/khl-drop-in-checker/check.sh >> /home/YOU/khl-drop-in-checker/check.log 2>&1
    ```
 
 ## Test a notification

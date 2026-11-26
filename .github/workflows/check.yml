@@ -1,0 +1,34 @@
+name: Check KHL seasons
+
+on:
+  schedule:
+    - cron: "0 17 * * *" # 09:00 PST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for season changes
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: ./check.sh
+
+      - name: Commit updated cache
+        run: |
+          if ! git diff --quiet seasons_cache.txt; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git add seasons_cache.txt
+            git commit -m "Update seasons cache"
+            git push
+          fi

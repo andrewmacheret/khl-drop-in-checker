@@ -34,17 +34,24 @@ if [ -n "$DIFF_OUTPUT" ]; then
     # Ignore lines that start with '+++' or '---'
     FORMATTED_CHANGES=$(echo "$DIFF_OUTPUT" | grep -E '^[+-]' | grep -vE '^(---|\+\+\+)')
 
-    # Send push notification via ntfy (and an email copy if NTFY_EMAIL is set)
-    EMAIL_HEADER=()
-    if [ -n "${NTFY_EMAIL:-}" ]; then
-        EMAIL_HEADER=(-H "Email: $NTFY_EMAIL")
-    fi
+    # Send push notification via ntfy
     curl -sf \
         -H "Title: KHL Seasons Changed" \
         -H "Tags: hockey,memo" \
-        "${EMAIL_HEADER[@]}" \
         -d "$FORMATTED_CHANGES" \
         "https://ntfy.sh/$TOPIC"
+    echo
+
+    # Email a copy through Gmail SMTP if credentials are set
+    if [ -n "${GMAIL_USER:-}" ] && [ -n "${GMAIL_APP_PASSWORD:-}" ]; then
+        printf 'From: %s\r\nTo: %s\r\nSubject: KHL Seasons Changed\r\n\r\n%s\r\n' \
+            "$GMAIL_USER" "$GMAIL_USER" "$FORMATTED_CHANGES" |
+            curl -sSf --ssl-reqd --url "smtp://smtp.gmail.com:587" \
+                --user "$GMAIL_USER:$GMAIL_APP_PASSWORD" \
+                --mail-from "$GMAIL_USER" --mail-rcpt "$GMAIL_USER" \
+                --upload-file -
+        echo "$(date): Email sent."
+    fi
 
     # Update cache file with new data
     echo "$CURRENT_DATA" > "$CACHE_FILE"

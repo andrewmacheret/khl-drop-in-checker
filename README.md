@@ -6,5 +6,5 @@ Daily GitHub Actions job that watches the Kraken Hockey League (DaySmart) season
 - `check.sh` fetches the season names, diffs them against `seasons_cache.txt`, and notifies on changes.
 - The workflow commits the updated `seasons_cache.txt` back to the repo.
 - Secret `NTFY_TOPIC`: the ntfy topic to publish to.
-- Secret `NTFY_EMAIL` (optional): ntfy.sh also emails each notification here.
+- Secrets `GMAIL_USER` + `GMAIL_APP_PASSWORD` (optional): also email each notification to `GMAIL_USER` via Gmail SMTP.
 - Run manually: Actions → Check KHL seasons → Run workflow.
